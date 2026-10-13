@@ -12,7 +12,7 @@ import { MarkdownViewer } from '../../components/MarkdownViewer';
 import { colors } from '../../theme';
 
 function hasInlinePreview(item: Artifact): boolean {
-  return item.type === 'pdf' || /\.mov$/i.test(item.originalName) ||
+  return item.type === 'pdf' || /\.(mov|mp3)$/i.test(item.originalName) ||
     (item.type === 'document' && /\.(docx|xlsx|pptx)$/i.test(item.originalName));
 }
 
