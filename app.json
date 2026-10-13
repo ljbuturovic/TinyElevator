@@ -8,9 +8,10 @@
     ],
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/tinyelevator-icon.png",
+    "icon": "./assets/icon-90-percent.png",
     "userInterfaceStyle": "light",
     "ios": {
+      "icon": "./assets/icon-90-percent.png",
       "bundleIdentifier": "com.ljubomirbuturovic.tinyelevator",
       "supportsTablet": false,
       "infoPlist": {

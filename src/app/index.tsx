@@ -1,5 +1,6 @@
 import ExpoQuickLook from '@magrinj/expo-quick-look';
 import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect } from 'expo-router';
@@ -31,6 +32,21 @@ const MENU_HEIGHT = 50;
 
 function ArtifactTile({ artifact, size, onLongPress, onRemove, removing }: { artifact: Artifact; size: number; onLongPress: (x: number, y: number) => void; onRemove: () => void; removing: boolean }) {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [textPreview, setTextPreview] = useState<{ id: string; text: string } | null>(null);
+
+  useEffect(() => {
+    if (artifact.type !== 'text' && artifact.type !== 'markdown') return;
+    let active = true;
+    const file = new File(artifactUri(artifact));
+    if (file.size <= 256_000) {
+      file.text()
+        .then((contents) => {
+          if (active) setTextPreview({ id: artifact.id, text: contents.replace(/\r\n?/g, '\n').trimStart().slice(0, 500) });
+        })
+        .catch(() => {});
+    }
+    return () => { active = false; };
+  }, [artifact]);
 
   useEffect(() => {
     if (artifact.type === 'image' || artifact.type === 'text' || artifact.type === 'markdown') return;
@@ -41,7 +57,8 @@ function ArtifactTile({ artifact, size, onLongPress, onRemove, removing }: { art
     return () => { active = false; };
   }, [artifact]);
 
-  const picture = artifact.type === 'image' ? artifactUri(artifact) : thumbnail;
+  const picture = artifact.type === 'image' ? artifactUri(artifact)
+    : artifact.type === 'text' || artifact.type === 'markdown' ? null : thumbnail;
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,6 +74,20 @@ function ArtifactTile({ artifact, size, onLongPress, onRemove, removing }: { art
       <View style={[styles.preview, { height: size }]}>
         {picture ? (
           <Image source={{ uri: picture }} style={styles.previewImage} contentFit="cover" />
+        ) : artifact.type === 'text' || artifact.type === 'markdown' ? (
+          <View style={styles.textPage}>
+            <Text style={styles.textPageLabel} allowFontScaling={false}>{artifact.type === 'markdown' ? 'MARKDOWN' : 'TEXT'}</Text>
+            <View style={styles.textPageRule} />
+            {textPreview?.id === artifact.id && textPreview.text ? (
+              <Text style={styles.textExcerpt} numberOfLines={4} allowFontScaling={false}>{textPreview.text}</Text>
+            ) : (
+              <View style={styles.textLines}>
+                <View style={styles.textLine} />
+                <View style={styles.textLine} />
+                <View style={[styles.textLine, styles.shortTextLine]} />
+              </View>
+            )}
+          </View>
         ) : (
           <View style={styles.placeholder}>
             <Text style={styles.fileType}>{fileLabel(artifact)}</Text>
@@ -239,6 +270,13 @@ const styles = StyleSheet.create({
   tile: { alignItems: 'stretch' },
   preview: { backgroundColor: colors.surface, borderRadius: 12, overflow: 'hidden' },
   previewImage: { width: '100%', height: '100%' },
+  textPage: { flex: 1, padding: 10, backgroundColor: '#FFFFFF', overflow: 'hidden' },
+  textPageLabel: { color: '#315F99', fontSize: 9, fontWeight: '700', letterSpacing: 0.4 },
+  textPageRule: { height: 1, marginTop: 4, marginBottom: 5, backgroundColor: '#D7E0EC' },
+  textExcerpt: { color: '#30415B', fontSize: 9, lineHeight: 11 },
+  textLines: { gap: 5 },
+  textLine: { height: 3, borderRadius: 2, backgroundColor: '#CAD4E2' },
+  shortTextLine: { width: '68%' },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   fileType: { fontSize: 16, fontWeight: '700', color: colors.fileType, letterSpacing: 0.5 },
   empty: { alignSelf: 'center', marginTop: 120, color: colors.muted, fontSize: 15 },

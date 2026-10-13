@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Artifact, artifactUri, loadArtifacts } from '../../artifacts';
 import { FilenameTitle } from '../../components/FilenameTitle';
+import { MarkdownViewer } from '../../components/MarkdownViewer';
 import { colors } from '../../theme';
 
 function hasInlinePreview(item: Artifact): boolean {
@@ -91,7 +92,9 @@ export default function ArtifactScreen() {
         <View style={styles.center}>
           <Text style={styles.message}>Preview unavailable</Text>
         </View>
-      ) : artifact.type === 'text' || artifact.type === 'markdown' ? (
+      ) : artifact.type === 'markdown' ? (
+        <MarkdownViewer markdown={textContent ?? ''} />
+      ) : artifact.type === 'text' ? (
         <ScrollView contentContainerStyle={styles.textBody}>
           <Text selectable style={styles.documentText}>{textContent}</Text>
         </ScrollView>
